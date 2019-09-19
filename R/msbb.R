@@ -3,9 +3,10 @@
 ##
 ## by Artem Sokolov
 
-library( tidyverse )
+library( magrittr )
 
 destDir <- "~/data/amp-ad/msbb"
+syn <- function(s) {synapser::synGet(s, downloadLocation=destDir)$path}
 
 ## Create directory if it doesn't exist
 dir.create( destDir, recursive=TRUE, showWarnings=FALSE )
@@ -17,39 +18,40 @@ synapser::synLogin()
 
 ## Load biotype annotations and retrieve names of protein-coding genes
 cat( "Downloading biotype annotations...\n" )
-fnBT <- synapser::synGet( "syn14236139", downloadLocation = destDir )$path
-BT <- read_csv( fnBT, col_types=cols() ) %>% filter( gene_biotype=="protein_coding" ) %>%
-    select( ENSEMBL = gene_id, HUGO = gene_name )
+fnBT <- syn( "syn14236139" )
+BT <- readr::read_csv( fnBT, col_types=readr::cols() ) %>%
+    dplyr::filter( gene_biotype=="protein_coding" ) %>%
+    dplyr::select( ENSEMBL = gene_id, HUGO = gene_name )
 
 ## Read raw expression matrix
 cat( "Downloading expression data...\n" )
-fnX <- synapser::synGet( "syn7809023", version=1, downloadLocation = destDir )$path
-Xraw <- read.delim( fnX, check.names=FALSE ) %>% rownames_to_column( "ENSEMBL" )
-
-## Map gene IDs to HUGO
-## PINX1 is the only gene with duplicate entries, but one of the entries has
-##   a higher total count, so we keep it and discard the other entry.
-X <- inner_join( BT, Xraw, by="ENSEMBL" ) %>% filter( ENSEMBL != "ENSG00000258724" ) %>%
-    select( -ENSEMBL ) %>% gather( barcode, Value, -HUGO )
+synX <- c( BM10="syn16796116", BM22="syn16796117", BM36="syn16796121", BM44="syn16796123" )
+X <- purrr::map( synX, function(s) {
+    read.delim( syn(s), check.names=FALSE ) %>%
+        tibble::rownames_to_column( "ENSEMBL" ) %>%
+        dplyr::inner_join( BT, by="ENSEMBL" ) %>%
+        dplyr::select( -ENSEMBL ) %>%
+        tidyr::gather( RNA_ID, Value, -HUGO ) %>%
+        dplyr::mutate( barcode = stringr::str_split(RNA_ID, "_", simplify=TRUE)[,3],
+                      RNA_ID = NULL ) }) %>% dplyr::bind_rows()
 
 ## Match sample barcodes against individual IDs and brain region information
 cat( "Annotating samples with brain region...\n" )
-fnZ <- synapser::synGet( "syn6100548", downloadLocation = destDir )$path
-XZ <- suppressMessages( read_csv(fnZ) ) %>%
-    select( BrodmannArea, barcode, individualIdentifier ) %>% distinct %>%
-    mutate( barcode = as.character(barcode) ) %>% inner_join( X, by = "barcode" )
+XZ <- syn( "syn6100548" ) %>% readr::read_csv(col_types=readr::cols()) %>%
+    dplyr::select( BrodmannArea, barcode, individualIdentifier ) %>%
+    dplyr::distinct() %>% dplyr::mutate_at( "barcode", as.character ) %>%
+    dplyr::inner_join( X, by = "barcode" )
 
 ## Load clinical covariates and combine with the expression matrix
 cat( "Downloading clinical covariates...\n" )
-fnY <- synapser::synGet( "syn6101474", downloadLocation = destDir )$path
-XY <- suppressMessages( read_csv( fnY ) ) %>%
-    select( individualIdentifier, PMI, AOD, CDR, bbscore ) %>%
-    inner_join( XZ, by = "individualIdentifier" )
+XY <- syn( "syn6101474" ) %>% readr::read_csv(col_types=readr::cols()) %>%
+    dplyr::select( individualIdentifier, PMI, AOD, CDR, bbscore ) %>%
+    dplyr::inner_join( XZ, by = "individualIdentifier" )
 
 ## Flatten the matrix to samples-by-(clin+genes) and save to file
 cat( "Finalizing...\n" )
-RR <- spread( XY, HUGO, Value ) %>%
-    rename( ID = individualIdentifier, Braak = bbscore, Barcode = barcode )
+RR <- tidyr::spread( XY, HUGO, Value ) %>%
+    dplyr::rename( ID = individualIdentifier, Braak = bbscore, Barcode = barcode )
 fnOut <- file.path( destDir, "msbb-pc.tsv.gz" )
 cat( "Writing output to", fnOut, "\n" )
-write_tsv( RR, fnOut )
+readr::write_tsv( RR, fnOut )
