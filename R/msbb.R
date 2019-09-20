@@ -24,12 +24,15 @@ BT <- readr::read_csv( fnBT, col_types=readr::cols() ) %>%
     dplyr::select( ENSEMBL = gene_id, HUGO = gene_name )
 
 ## Read raw expression matrix
+## PINX1 is the only gene with duplicate entries, but one of the entries has
+##   a higher total count, so we keep it and discard the other entry.
 cat( "Downloading expression data...\n" )
 synX <- c( BM10="syn16796116", BM22="syn16796117", BM36="syn16796121", BM44="syn16796123" )
 X <- purrr::map( synX, function(s) {
     read.delim( syn(s), check.names=FALSE ) %>%
         tibble::rownames_to_column( "ENSEMBL" ) %>%
         dplyr::inner_join( BT, by="ENSEMBL" ) %>%
+        dplyr::filter( ENSEMBL != "ENSG00000258724" ) %>%
         dplyr::select( -ENSEMBL ) %>%
         tidyr::gather( RNA_ID, Value, -HUGO ) %>%
         dplyr::mutate( barcode = stringr::str_split(RNA_ID, "_", simplify=TRUE)[,3],
@@ -52,6 +55,6 @@ XY <- syn( "syn6101474" ) %>% readr::read_csv(col_types=readr::cols()) %>%
 cat( "Finalizing...\n" )
 RR <- tidyr::spread( XY, HUGO, Value ) %>%
     dplyr::rename( ID = individualIdentifier, Braak = bbscore, Barcode = barcode )
-fnOut <- file.path( destDir, "msbb-pc.tsv.gz" )
+fnOut <- file.path( destDir, "msbb.tsv.gz" )
 cat( "Writing output to", fnOut, "\n" )
 readr::write_tsv( RR, fnOut )
