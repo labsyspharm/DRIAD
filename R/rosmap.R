@@ -54,12 +54,11 @@ wrangleROSMAP <- function( destDir = "~/data/amp-ad/rosmap" )
         dplyr::distinct() %>% dplyr::inner_join( XX, ., by="rnaseq_id" )
 
     ## Match expression data up against the following clinical covariates:
-    ## ID, PMI, AOD, CDR, Braak, BrodmannArea
+    ## ID, PMI, AOD, CDR, Braak
     cat( "Matching against clinical covariates...\n" )
     fnY <- synapser::synGet( "syn3191087", version=6, downloadLocation = destDir )$path
     Y <- suppressWarnings( readr::read_csv(fnY, col_types=readr::cols()) )%>%
-        dplyr::select( projid, PMI = pmi, AOD = age_death, CDR = cogdx, Braak = braaksc ) %>%
-        dplyr::mutate( BrodmannArea = "BM9,BM46" )
+        dplyr::select( projid, PMI = pmi, AOD = age_death, CDR = cogdx, Braak = braaksc )
 
     ## Combining everything into a common data frame
     cat( "Finalizing...\n" )
