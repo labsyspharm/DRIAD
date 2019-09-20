@@ -27,7 +27,8 @@ BT <- readr::read_csv( fnBT, col_types=readr::cols() ) %>%
 ## PINX1 is the only gene with duplicate entries, but one of the entries has
 ##   a higher total count, so we keep it and discard the other entry.
 cat( "Downloading expression data...\n" )
-synX <- c( BM10="syn16796116", BM22="syn16796117", BM36="syn16796121", BM44="syn16796123" )
+##synX <- c( BM10="syn16796116", BM22="syn16796117", BM36="syn16796121", BM44="syn16796123" )
+synX <- c( BM10="syn16795931", BM22="syn16795934", BM36="syn16795937", BM44="syn16795940" )
 X <- purrr::map( synX, function(s) {
     read.delim( syn(s), check.names=FALSE ) %>%
         tibble::rownames_to_column( "ENSEMBL" ) %>%
