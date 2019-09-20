@@ -7,11 +7,12 @@ library( magrittr )
 
 wrangleMSBB <- function( destDir = "~/data/amp-ad/msbb" )
 {
-    syn <- function(s) {synapser::synGet(s, downloadLocation=destDir)$path}
-
     ## Create directory if it doesn't exist
+    synDir <- file.path(destDir, "raw")
     dir.create( destDir, recursive=TRUE, showWarnings=FALSE )
     cat( "Wrangling MSBB dataset to", destDir, "\n" )
+
+    syn <- function(s) {synapser::synGet(s, downloadLocation=synDir)$path}
 
     ## Login to Synapse and download/wrangle data
     cat( "Logging in to Synapse...\n" )

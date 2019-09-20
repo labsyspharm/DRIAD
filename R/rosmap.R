@@ -8,22 +8,23 @@ library( magrittr )
 wrangleROSMAP <- function( destDir = "~/data/amp-ad/rosmap" )
 {
     ## Create directory if it doesn't exist
-    dir.create( destDir, recursive=TRUE, showWarnings=FALSE )
+    synDir <- file.path(destDir, "raw")
+    dir.create( synDir, recursive=TRUE, showWarnings=FALSE )
     cat( "Wrangling ROS/MAP dataset to", destDir, "\n" )
 
+    syn <- function(s) {synapser::synGet(s, downloadLocation=synDir)$path}
+    
     ## Login to Synapse and download/wrangle data
     cat( "Logging in to Synapse... " )
     synapser::synLogin()
 
     ## Read raw expression matrix
     cat( "Downloading expression data...\n" )
-    fnX <- synapser::synGet( "syn3505720", downloadLocation = destDir )$path
-    Xraw <- readr::read_tsv( fnX, col_types = readr::cols() )
+    Xraw <- readr::read_tsv( syn("syn3505720"), col_types = readr::cols() )
 
     ## Load biotype annotations and retrieve names of protein-coding genes
     cat( "Downloading biotype annotations...\n" )
-    fnBT <- synapser::synGet( "syn14236139", downloadLocation = destDir )$path
-    BT <- readr::read_csv( fnBT, col_types=readr::cols() ) %>%
+    BT <- readr::read_csv( syn("syn14236139"), col_types=readr::cols() ) %>%
         dplyr::filter( gene_biotype=="protein_coding" ) %>%
         dplyr::select( ENSEMBL = gene_id, HUGO = gene_name )
 
@@ -48,15 +49,14 @@ wrangleROSMAP <- function( destDir = "~/data/amp-ad/rosmap" )
 
     ## Match sample IDs against individual identifiers
     cat( "Matching sample and individual IDs...\n" )
-    fnZ <- synapser::synGet( "syn3382527", downloadLocation = destDir )$path
-    XZ <- readr::read_csv(fnZ, col_types=readr::cols()) %>%
+    XZ <- readr::read_csv(syn("syn3382527"), col_types=readr::cols()) %>%
         dplyr::select( projid, rnaseq_id ) %>% na.omit %>%
         dplyr::distinct() %>% dplyr::inner_join( XX, ., by="rnaseq_id" )
 
     ## Match expression data up against the following clinical covariates:
     ## ID, PMI, AOD, CDR, Braak
     cat( "Matching against clinical covariates...\n" )
-    fnY <- synapser::synGet( "syn3191087", version=6, downloadLocation = destDir )$path
+    fnY <- synapser::synGet( "syn3191087", version=6, downloadLocation = synDir )$path
     Y <- suppressWarnings( readr::read_csv(fnY, col_types=readr::cols()) )%>%
         dplyr::select( projid, PMI = pmi, AOD = age_death, CDR = cogdx, Braak = braaksc )
 
