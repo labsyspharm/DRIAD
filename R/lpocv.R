@@ -149,24 +149,56 @@ evalGeneSet <- function( gsi, XY, lP, nBK=0 )
     RR %>% dplyr::select( -Data )
 }
 
+## Collapses the result of evalGeneSet into a single-row data frame
+summarizeBK <- function( .df )
+{
+    vBK <- .df %>% dplyr::filter( Name == "BK" ) %>% dplyr::pull(AUC)
+    .df %>% dplyr::filter( Name == "GSI" ) %>%
+        dplyr::mutate( BK = list(vBK), Name=NULL )
+}
+
+## Evaluates multiple gene sets after matching them up against a given dataset
+## lGSI - list of character vectors, each encapsulating a gene set of interest (GSI)
+## XY - Dataset, as loaded by prepareTask()
+## lP - list of pairs for cross-validation
+## nBK - number of background sets to generate for each GSI
+## rs - random seed to allow for reproducibility
+evalGeneSets <- function( lGSI, XY, lP, nBK=0, rs=100 )
+{
+    set.seed(rs)
+    
+    ## Isolate genes that exist in the data
+    lGSI <- purrr::map( lGSI, intersect, colnames(XY))
+
+    ## Generate gene set names if none exist
+    if( is.null(names(lGSI)) )
+        names(lGSI) <- stringr::str_c("GeneSet",1:length(lGSI))
+
+    ## Evaluate individual gene sets and combine results into a single data frame
+    R <- purrr::map( lGSI, evalGeneSet, XY, lP, nBK ) %>%
+        purrr::map( summarizeBK ) %>% dplyr::bind_rows( .id = "Set" )
+
+    ## Compute empirical p-values
+    R %>% dplyr::mutate( pval = purrr::map2_dbl(AUC, BK,
+                                                ~`if`(length(.y)==0, NA, mean(.x <= .y))) )
+}
+
 ## Testing the functionality in this file
 mytest <- function()
 {
-    X <- prepareTask( "~/data/amp-ad/rosmap/rosmap.tsv.gz", "AC" )
-    P <- testPairs()
+    XY <- prepareTask( "~/data/amp-ad/rosmap/rosmap.tsv.gz", "AC" )
+    lP <- testPairs()
 
-    ## PIK3CA inhibitor gsk1059615
-    vGSK <- c("CSNK1G2", "PIK3CD", "NEK10", "DYRK1A", "PIK3CB", "PIK3CG", "JAK3", "BMP2K",
-              "STK10", "MAP3K19", "MTOR", "GAK", "CLK1", "CLK3", "PIK3CA", "MAPK15")
+    lGSI <- list(
+        ## PIK3CA inhibitor gsk1059615
+        vGSK = c("CSNK1G2", "PIK3CD", "NEK10", "DYRK1A", "PIK3CB", "PIK3CG", "JAK3", "BMP2K",
+                 "STK10", "MAP3K19", "MTOR", "GAK", "CLK1", "CLK3", "PIK3CA", "MAPK15"),
+        ## Apoptosis gene set provided by Kris Sarosiek
+        vApoptosis = c("BAX", "BAK1", "BCL2", "BCL2L1", "BCL2L11", "MCL1", "Test"),
+        ## SPARCS gene set provided by Russell Jenkins
+        vSPARCS <- c("TRIM22", "TRIM38", "IL32", "SPATS2L", "EPHA3", "HERC3", "ADAM19", "SERPINB9",
+                     "IFI44L", "F3", "BEND6", "AIG1", "MSRB2", "TNFRSF9", "ANTXR1" )
+    )
     
-    rGSK <- vGSK %>% evalGeneSetBK( 10, X, P )
-    
-    ## Apoptosis gene set provided by Kris Sarosiek
-    rApoptosis <- c("BAX", "BAK1", "BCL2", "BCL2L1", "BCL2L11", "MCL1") %>%
-        evalGeneSetBK( 10, X, P )
-
-    ## SPARCS gene set provided by Russell Jenkins
-    rSPARCS <- c("TRIM22", "TRIM38", "IL32", "SPATS2L", "EPHA3", "HERC3", "ADAM19", "SERPINB9",
-                 "IFI44L", "F3", "BEND6", "AIG1", "MSRB2", "TNFRSF9", "ANTXR1" ) %>%
-        evalGeneSetBK( 10, X, P )
+    RR <- evalGeneSets( lGSI, XY, lP, 10 )
 }
