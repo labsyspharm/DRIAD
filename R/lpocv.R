@@ -33,6 +33,37 @@ prepareTask <- function( fn, task )
         dplyr::filter( !is.na(Label) )
 }
 
+## Prepares a set of pairs for leave-pair-out cross-validation
+## XY - dataset, as loaded by prepareTask()
+## rs - random seed for reproducibility
+preparePairs <- function( XY, rs=100 )
+{
+    ## Argument verification
+    stopifnot( all(c("ID","AOD","Label") %in% colnames(XY)) )
+    stopifnot( all(sort(unique(XY$Label)) == c("neg","pos")) )
+
+    ## Select the relevant columns, standardize age
+    S <- XY %>% dplyr::select( ID, AOD, Label ) %>%
+        dplyr::mutate_at( "AOD", dplyr::recode, "90+" = "90" ) %>%
+        dplyr::mutate_at( "AOD", as.numeric )
+
+    ## For each sample, identify potential pair candidates from the other class
+    ## Compute the distance in age space and select the closest candidate
+    ## Break ties randomly
+    set.seed(rs)
+    S1 <- S %>% dplyr::mutate( Cand = purrr::map(Label, ~dplyr::filter(S, Label != .x)) ) %>%
+        dplyr::mutate_at( "Cand", purrr::map, dplyr::rename_all, stringr::str_c, "c" ) %>%
+        tidyr::unnest() %>% dplyr::group_by( ID ) %>%
+        dplyr::mutate( Dist = abs(AODc-AOD) ) %>%
+        dplyr::filter( Dist == min(Dist) ) %>%
+        dplyr::slice( sample(1:(dplyr::n()),1) ) %>% dplyr::ungroup()
+
+    ## Finalize the format
+    S1 %>% dplyr::select( ID, IDc ) %>% dplyr::mutate( Index = 1:(dplyr::n()) ) %>%
+        with(split(., Index)) %>% purrr::map(dplyr::select, -Index) %>%
+            purrr::map(unlist) %>% purrr::map(unname)
+}
+
 ## A test set of 10 pairs for debugging (ROSMAP)
 testPairs <- function()
 {
