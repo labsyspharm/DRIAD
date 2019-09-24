@@ -64,21 +64,6 @@ preparePairs <- function( XY, rs=100 )
             purrr::map(unlist) %>% purrr::map(unname)
 }
 
-## A test set of 10 pairs for debugging (ROSMAP)
-testPairs <- function()
-{
-    list(`0` = c("2899847", "78452313"), `1` = c("3889845", "15121461"),
-         `2` = c("4127190", "7253015"), `3` = c("4127190", "5689621"),
-         `4` = c("6107196", "50197261"), `5` = c("9841821", "10885370"),
-         `6` = c("10101327", "20532115"), `7` = c("10203224", "20151388"),
-         `8` = c("10208143", "20152393"), `9` = c("3889845", "10218339"),
-         `10` = c("10222853", "20904509"), `11` = c("10253148", "50302004"),
-         `12` = c("10262905", "67429065"), `13` = c("10288185", "78452313"),
-         `14` = c("10290427", "20109994"), `15` = c("10291856", "56432243"),
-         `16` = c("10383017", "20225925"), `17` = c("10490993", "11430815"),
-         `18` = c("10502798", "50300408"), `19` = c("10518782", "89001223"))
-}
-
 ## Reduces a dataset to the gene set of interest
 ## gs - vector character containing the gene set of interest
 ## X - Dataset, as loaded by prepareTask()
@@ -201,9 +186,10 @@ evalGeneSets <- function( lGSI, XY, lP, nBK=0, rs=100 )
     ## Isolate genes that exist in the data
     lGSI <- purrr::map( lGSI, intersect, colnames(XY))
 
-    ## Generate gene set names if none exist
-    if( is.null(names(lGSI)) )
-        names(lGSI) <- stringr::str_c("GeneSet",1:length(lGSI))
+    ## Fill in empty names
+    vn <- stringr::str_c("GeneSet",1:length(lGSI))
+    if( is.null(names(lGSI)) ) names(lGSI) <- vn
+    names(lGSI) <- purrr::map2( names(lGSI), vn, ~`if`(.x=="",.y,.x) )
 
     ## Evaluate individual gene sets and combine results into a single data frame
     R <- purrr::map( lGSI, evalGeneSet, XY, lP, nBK ) %>%
@@ -218,17 +204,17 @@ evalGeneSets <- function( lGSI, XY, lP, nBK=0, rs=100 )
 mytest <- function()
 {
     XY <- prepareTask( "~/data/amp-ad/rosmap/rosmap.tsv.gz", "AC" )
-    lP <- testPairs()
+    lP <- preparePairs(XY)
 
     lGSI <- list(
         ## PIK3CA inhibitor gsk1059615
-        vGSK = c("CSNK1G2", "PIK3CD", "NEK10", "DYRK1A", "PIK3CB", "PIK3CG", "JAK3", "BMP2K",
+        GSK = c("CSNK1G2", "PIK3CD", "NEK10", "DYRK1A", "PIK3CB", "PIK3CG", "JAK3", "BMP2K",
                  "STK10", "MAP3K19", "MTOR", "GAK", "CLK1", "CLK3", "PIK3CA", "MAPK15"),
         ## Apoptosis gene set provided by Kris Sarosiek
-        vApoptosis = c("BAX", "BAK1", "BCL2", "BCL2L1", "BCL2L11", "MCL1", "Test"),
+        Apoptosis = c("BAX", "BAK1", "BCL2", "BCL2L1", "BCL2L11", "MCL1", "Test"),
         ## SPARCS gene set provided by Russell Jenkins
-        vSPARCS <- c("TRIM22", "TRIM38", "IL32", "SPATS2L", "EPHA3", "HERC3", "ADAM19", "SERPINB9",
-                     "IFI44L", "F3", "BEND6", "AIG1", "MSRB2", "TNFRSF9", "ANTXR1" )
+        SPARCS = c("TRIM22", "TRIM38", "IL32", "SPATS2L", "EPHA3", "HERC3", "ADAM19", "SERPINB9",
+                   "IFI44L", "F3", "BEND6", "AIG1", "MSRB2", "TNFRSF9", "ANTXR1" )
     )
     
     RR <- evalGeneSets( lGSI, XY, lP, 10 )
