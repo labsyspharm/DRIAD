@@ -219,3 +219,30 @@ mytest <- function()
     
     RR <- evalGeneSets( lGSI, XY, lP, 10 )
 }
+
+## Parses a .gmt file and puts it into the list format
+## iName - index of the column containing pathway names
+##    (This is typically 1 for Broad MSigDB sets, and 2 for PathwayCommons sets)
+read_gmt <- function( fn, iName=1 )
+{
+    readr::read_lines(fn) %>% stringr::str_split( "\\t" ) %>%
+        set_names( purrr::map_chr(., dplyr::nth, iName) ) %>%
+        purrr::map( ~.x[-2:-1] )
+}
+
+## DGE1 sets on ROSMAP
+DGE1_ROSMAP <- function()
+{
+    ## Download the gene sets
+    synapser::synLogin()
+    fn <- synapser::synGet( "syn18345458", downloadLocation="." )$path
+    gsiROSMAP <- read_gmt(fn)
+
+    ## Set up the prediction task
+    XY <- prepareTask( "~/data/amp-ad/rosmap/rosmap.tsv.gz", "AC" )
+    lP <- preparePairs(XY)
+
+    ## Evaluate all gene sets
+    RR <- evalGeneSets( gsiROSMAP, XY, lP, 100 )
+    save( RR, file="DGE1-ROSMAP.RData" )
+}
