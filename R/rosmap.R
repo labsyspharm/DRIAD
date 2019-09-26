@@ -56,7 +56,7 @@ wrangleROSMAP <- function( destDir = "~/data/amp-ad/rosmap" )
     ## Match expression data up against the following clinical covariates:
     ## ID, PMI, AOD, CDR, Braak
     cat( "Matching against clinical covariates...\n" )
-    fnY <- synapser::synGet( "syn3191087", version=6, downloadLocation = synDir )$path
+    fnY <- synapser::synGet( "syn3191087", downloadLocation = synDir )$path
     Y <- suppressWarnings( readr::read_csv(fnY, col_types=readr::cols()) )%>%
         dplyr::select( projid, PMI = pmi, AOD = age_death, CDR = cogdx, Braak = braaksc )
 
