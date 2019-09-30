@@ -73,7 +73,7 @@ reduceToGenes <- function( gs, X )
     stopifnot( all(gs %in% colnames(X)) )
 
     ## Reduce columns accordingly
-    X %>% dplyr::select( ID, Label, dplyr::one_of(gs) )
+    X[,c("ID","Label",gs)]
 }
 
 ## Train-test for a single pair using liblinear implementation
@@ -106,8 +106,6 @@ lpocv <- function( XY, lPairs )
     ## lo - prediction values associated with low-label example in the pair
     AUC_LPOCV <- function( hi, lo )
     { (0.5*sum(hi==lo) + sum(hi>lo)) / length(hi) }
-    
-    cat( "." )
     
     ## Ensure that only pairs of samples are withheld
     stopifnot( all( range(purrr::map_int( lPairs, length )) == c(2,2) ) )
@@ -153,14 +151,11 @@ evalGeneSet <- function( gsi, XY, lP, nBK=0 )
         lgs <- c(lgs, genBK( gsi, XY, nBK ))
 
     ## Downsample the data according to the requested gene sets
-    cat( "Generating data slices...\n" )
     SS <- tibble::enframe( lgs, "Name", "Feats" ) %>%
         dplyr::mutate( Data = purrr::map(Feats, reduceToGenes, XY) )
-    
+
     ## Run LPOCV on each slice of data
-    cat( "Running LPOCV" )
     RR <- SS %>% dplyr::mutate( AUC = purrr::map_dbl(Data, lpocv, lP) )
-    cat( "\n" )
 
     RR %>% dplyr::select( -Data )
 }
@@ -198,5 +193,15 @@ evalGeneSets <- function( lGSI, XY, lP, nBK=0, rs=100 )
     ## Compute empirical p-values
     R %>% dplyr::mutate( pval = purrr::map2_dbl(AUC, BK,
                                                 ~`if`(length(.y)==0, NA, mean(.x <= .y))) )
+}
+
+## Parses a .gmt file and puts it into the list format
+## iName - index of the column containing pathway names
+##    (This is typically 1 for Broad MSigDB sets, and 2 for PathwayCommons sets)
+read_gmt <- function( fn, iName=1 )
+{
+    readr::read_lines(fn) %>% stringr::str_split( "\\t" ) %>%
+        set_names( purrr::map_chr(., dplyr::nth, iName) ) %>%
+        purrr::map( ~.x[-2:-1] )
 }
 
