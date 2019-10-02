@@ -77,23 +77,28 @@ reduceToGenes <- function( gs, X )
 }
 
 ## Train-test for a single pair using liblinear implementation
-liblinear <- function( XY, vTest )
+## X - matrix of expression values; rownames are sample IDs; colnames are genes
+## y - character vector of labels, sampled from {"neg","pos"}
+## vTest - IDs to withhold for testing
+## Returns a length(vTest)-by-3 data frame containing test IDs, true Labels and predictions
+liblinear <- function( X, y, vTest )
 {
     ## Argument verification
-    stopifnot( all( sort(unique(XY$Label)) == c("neg","pos") ) )
+    stopifnot( is.matrix(X) )
+    stopifnot( all(names(y) == rownames(X)) )
+    stopifnot( all(vTest %in% rownames(X)) )
+    stopifnot( all(sort(unique(y)) == c("neg","pos")) )
     
     ## Split the data into train and test
-    Xte <- XY %>% dplyr::filter( ID %in% vTest ) %>%
-        dplyr::select( -ID, -Label ) %>% as.matrix
-    Xtr <- XY %>% dplyr::filter( !(ID %in% vTest) ) %>%
-        dplyr::select( -ID, -Label ) %>% as.matrix
-    ytr <- dplyr::filter( XY, !(ID %in% vTest) )$Label
+    vTrain <- setdiff( rownames(X), vTest )
+    Xte <- X[vTest,]
+    Xtr <- X[vTrain,]
+    ytr <- y[vTrain]
 
     ## Train a model and apply it to test data
     m <- LiblineaR::LiblineaR( Xtr, ytr, type=0 )
     ypred <- predict( m, Xte, proba=TRUE )$probabilities[,"pos"]
-    XY %>% dplyr::filter( ID %in% vTest ) %>%
-        dplyr::select( ID, Label ) %>% dplyr::mutate( Pred = ypred )
+    tibble::enframe( y[vTest], "ID", "Label" ) %>% dplyr::mutate( Pred = ypred )
 }
 
 ## Leave pair out cross-validation for a given dataset
@@ -111,8 +116,13 @@ lpocv <- function( XY, lPairs )
     stopifnot( all( range(purrr::map_int( lPairs, length )) == c(2,2) ) )
     stopifnot( all( purrr::flatten_chr(lPairs) %in% XY$ID ) )
 
+    ## Split the XY frame into features and labels
+    X <- XY %>% as.data.frame() %>% tibble::column_to_rownames("ID") %>%
+        dplyr::select( -Label ) %>% as.matrix
+    y <- with( XY, rlang::set_names(Label, ID) )
+    
     ## Traverse the pairs and perform cross-validation
-    RR <- purrr::map( lPairs, ~liblinear(XY, .x) )
+    RR <- purrr::map( lPairs, ~liblinear(X, y, .x) )
 
     ## Compute AUC
     dplyr::bind_rows( RR, .id="index" ) %>% dplyr::select( -ID ) %>%
