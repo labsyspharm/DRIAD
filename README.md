@@ -74,7 +74,7 @@ pairs1 <- preparePairs( task1 )
 
 ## Evaluating gene sets
 
-Individual gene sets can be assembled by-hand or parsed from a .gmt file using the provided `read_gmt()`. For example, here's the gene set proposed by Mariet Allen as the most differentially-expressed contrast of the temporal cortex in AD vs. non-AD subjects ([PMID: 29107053](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5866744/), Suppl. Table 3, genes with Bonferroni-corrected p-value < 0.05):
+Individual gene sets can be assembled by-hand or parsed from a .gmt file using the provided `read_gmt()`. For example, here's the gene set proposed by Mariet Allen and colleagues as the most differentially-expressed contrast of the temporal cortex in AD vs. non-AD subjects ([PMID: 29107053](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5866744/), Suppl. Table 3, genes with Bonferroni-corrected p-value < 0.05):
 
 ``` r
 gs <- c("ADAMTS2", "ADCYAP1", "AFG3L1", "ANGEL2", "ANGPT1", "ART3", 
@@ -89,7 +89,7 @@ gs <- c("ADAMTS2", "ADCYAP1", "AFG3L1", "ANGEL2", "ANGPT1", "ART3",
         "TFPT", "TXNDC17", "USP47", "VWC2", "XRN1", "ZBTB5")
  ```
  
-A list of one or more gene sets can then be provided to `evalGeneSets()` together with the classification task and the correpsonding pairing of samples for cross-validation. For example, let's give the gene set above a name and evaluate it on our first classification task (A-vs-C in MSBB36) against 100 background sets:
+A list of one or more gene sets can be provided to `evalGeneSets()` together with the classification task and the correpsonding pairing of samples for cross-validation. For example, let's give the gene set above a name and evaluate it on our first classification task (A-vs-C in MSBB36) against 100 background sets:
 
 ``` r
 evalGeneSets( list("Allen, et al."=gs), task1, pairs1, 100 )
@@ -98,4 +98,4 @@ evalGeneSets( list("Allen, et al."=gs), task1, pairs1, 100 )
 # 1 Allen, et al. <chr [61]> 0.816 <dbl [100]>  0.05
 ```
 
-The function returns the set of gene names that are found in the dataset (61 out of the 68 we specified), the AUC estimated through LPOCV, the 100 performance values associated with background sets, and the resulting empricial p-value.
+The function returns the set of gene names that are found in the dataset (61 out of the 68 we specified), the area under the ROC curve (AUC) estimated through LPOCV, the 100 performance values associated with background sets, and the resulting empricial p-value.
