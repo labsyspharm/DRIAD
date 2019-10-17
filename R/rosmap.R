@@ -1,10 +1,11 @@
-## A variant of rosmap.R that reduces the space of molecular
-##   features to protein-coding (pc) genes
-##
-## by Artem Sokolov
-
-library( magrittr )
-
+#' Wrangling ROSMAP data
+#'
+#' Wrangles ROSMAP molecular and clinical variables into a common data frame
+#'
+#' @param destDir Destination directory where the file is to be written
+#' @return Filename of the wrangled dataset
+#' @importFrom magrittr %>%
+#' @export
 wrangleROSMAP <- function( destDir = "~/data/amp-ad/rosmap" )
 {
     ## Create directory if it doesn't exist
@@ -70,4 +71,5 @@ wrangleROSMAP <- function( destDir = "~/data/amp-ad/rosmap" )
     fnOut <- file.path( destDir, "rosmap.tsv.gz" )
     cat( "Writing output to", fnOut, "\n" )
     readr::write_tsv( XY, fnOut )
+    fnOut
 }

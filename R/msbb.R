@@ -1,10 +1,11 @@
-## Wrangling of MSBB RNAseq data and matching clinical covariates
-##   Reduces gene space to the protein coding regions
-##
-## by Artem Sokolov
-
-library( magrittr )
-
+#' Wrangling MSBB data
+#'
+#' Wrangles MSBB molecular and clinical variables into a common data frame
+#'
+#' @param destDir Destination directory where the file is to be written
+#' @return Character vector of filenames of the wrangled datasets (one per brain region)
+#' @importFrom magrittr %>%
+#' @export
 wrangleMSBB <- function( destDir = "~/data/amp-ad/msbb" )
 {
     ## Create directory if it doesn't exist
@@ -61,4 +62,5 @@ wrangleMSBB <- function( destDir = "~/data/amp-ad/msbb" )
     fnOut <- names(X) %>% stringr::str_sub( 3 ) %>%
         stringr::str_c( "msbb", ., ".tsv.gz" ) %>% purrr::map( ~file.path(destDir,.x) )
     R <- purrr::map2( X, fnOut, readr::write_tsv )
+    fnOut
 }

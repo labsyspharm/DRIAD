@@ -4,12 +4,13 @@ Version: 0.1
 Authors@R: c(
     person( "Artem", "Sokolov", email="artem.sokolov@gmail.com", role = c("aut","cre") ),
     person( "et al.", email="", role = c("aut") ) )
-Description: Machine learning framework to identify potential Drug Repurposing In Alzheimer's Disease (DRIAD)
+Description: Machine learning framework to identify potential repurposing candidates for Alzheimer's Disease
 License: MIT
 URL: https://github.com/labsyspharm/DRIAD
 BugReports: https://github.com/labsyspharm/DRIAD/issues
 Depends: R (>= 3.6.1)
 Imports:
     tidyverse,
+    furrr,
     LiblineaR
 RoxygenNote: 6.1.1
