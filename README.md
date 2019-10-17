@@ -24,3 +24,20 @@ The package provides two functions to wrangle AMP-AD datasets, one for ROSMAP an
 * ROSMAP: https://www.synapse.org/#!AccessRequirements:ID=syn3219045&TYPE=ENTITY
 * MSBB: https://www.synapse.org/#!AccessRequirements:ID=syn3159438&TYPE=ENTITY
 
+Once the data usage agreements have been accepted, each function can be called with a directory path where the wrangled data should live:
+
+``` r
+fnROSMAP <- wrangleROSMAP("~/data/ROSMAP")
+fnMSBB   <- wrangleMSBB("~/data/MSBB")
+```
+
+Both functions return the corresponding filenames of wrangled datasets in tab-delimited format. In case of MSBB, there are four such files: one for each region of the brain profiled by the project.
+
+``` r
+fnROSMAP
+# [1] "~/data/ROSMAP/rosmap.tsv.gz"
+
+fnMSBB
+# [1] "~/data/MSBB/msbb10.tsv.gz" "~/data/MSBB/msbb22.tsv.gz"
+# [3] "~/data/MSBB/msbb36.tsv.gz" "~/data/MSBB/msbb44.tsv.gz"
+```
