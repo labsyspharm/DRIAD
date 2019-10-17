@@ -44,7 +44,33 @@ fnMSBB
 
 ## Setting up a prediction task
 
+The package considers binary classification tasks that contrast early (A), intermediate (B) and late (C) disease stages, as defined by the Braak staging through neuropathological assessment. To set up a classification task, we need to specify a dataset wrangled by `wrangleROSMAP()` or `wrangleMSBB()` as well as which pair of classes we want to compare. For example, the early-vs-late classification task in MSBB (Brodmann Area 36) can be constructed via
 
+``` r
+# Recall that fnMSBB contains four filenames, the third of which points to msbb36.tsv.gz
+task1 <- prepateTask( fnMSBB[3], "AC" )
+```
+
+Likewise, the intermediate-vs-late classification task in ROSMAP is constructed via
+
+``` r
+task2 <- prepareTask( fnROSMAP, "BC" )
+```
+
+To evaluate predictor peformance for a given binary classification task, we consider [leave-pair-out cross-validation (LPOCV)](http://proceedings.mlr.press/v8/airola10a/airola10a.pdf), where one sample from each of the two classes is withheld in every cross-validation fold. The samples are age-matched to address the potential bias of age as a confounder in performance estimation. The package can automatically construct the pairing of age-matched samples, using a task definition produced by `prepareTask()`. Continuing the examples above,
+
+``` r
+pairs1 <- preparePairs( task1 )
+# $`1`
+# [1] "AMPAD_MSSM_0000003566" "AMPAD_MSSM_0000016747"
+# 
+# $`2`
+# [1] "AMPAD_MSSM_0000004030" "AMPAD_MSSM_0000077958"
+# 
+# $`3`
+# [1] "AMPAD_MSSM_0000004310" "AMPAD_MSSM_0000041763"
+# ...and 138 more pairs
+```
 
 ## Evaluating gene sets
 
@@ -63,3 +89,13 @@ gs <- c("ADAMTS2", "ADCYAP1", "AFG3L1", "ANGEL2", "ANGPT1", "ART3",
         "TFPT", "TXNDC17", "USP47", "VWC2", "XRN1", "ZBTB5")
  ```
  
+A list of one or more gene sets can then be provided to `evalGeneSets()` together with the classification task and the correpsonding pairing of samples for cross-validation. For example, let's give the gene set above a name and evaluate it on our first classification task (A-vs-C in MSBB36) against 100 background sets:
+
+``` r
+evalGeneSets( list("Allen, et al."=gs), task1, pairs1, 100 )
+#   Set           Feats        AUC BK           pval
+#   <chr>         <list>     <dbl> <list>      <dbl>
+# 1 Allen, et al. <chr [61]> 0.816 <dbl [100]>  0.05
+```
+
+The function returns the set of gene names that are found in the dataset (61 out of the 68 we specified), the AUC estimated through LPOCV, the 100 performance values associated with background sets, and the resulting empricial p-value.
