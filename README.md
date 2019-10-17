@@ -57,7 +57,7 @@ Likewise, the intermediate-vs-late classification task in ROSMAP is constructed 
 task2 <- prepareTask( fnROSMAP, "BC" )
 ```
 
-To evaluate predictor peformance for a given binary classification task, we consider [leave-pair-out cross-validation (LPOCV)](http://proceedings.mlr.press/v8/airola10a/airola10a.pdf), where one sample from each of the two classes is withheld in every cross-validation fold. The samples are age-matched to address the potential bias of age as a confounder in performance estimation. The package can automatically construct the pairing of age-matched samples, using a task definition produced by `prepareTask()`. Continuing the examples above,
+To evaluate predictor peformance for a given binary classification task, we consider [leave-pair-out cross-validation (LPOCV)](http://proceedings.mlr.press/v8/airola10a/airola10a.pdf), where one sample from each of the two classes is withheld in every cross-validation fold. The samples are age-matched to address the potential bias of age as a confounder in performance estimation. The package can automatically construct the pairing of age-matched samples, using a task definition produced by `prepareTask()`. Continuing the example above,
 
 ``` r
 pairs1 <- preparePairs( task1 )
