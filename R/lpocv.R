@@ -56,7 +56,7 @@ preparePairs <- function( XY, rs=100 )
     set.seed(rs)
     S1 <- S %>% dplyr::mutate( Cand = purrr::map(Label, ~dplyr::filter(S, Label != .x)) ) %>%
         dplyr::mutate_at( "Cand", purrr::map, dplyr::rename_all, stringr::str_c, "c" ) %>%
-        tidyr::unnest() %>% dplyr::group_by( ID ) %>%
+        tidyr::unnest( "Cand" ) %>% dplyr::group_by( ID ) %>%
         dplyr::mutate( Dist = abs(AODc-AOD) ) %>%
         dplyr::filter( Dist == min(Dist) ) %>%
         dplyr::slice( sample(1:(dplyr::n()),1) ) %>% dplyr::ungroup()
