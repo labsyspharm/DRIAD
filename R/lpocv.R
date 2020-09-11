@@ -79,59 +79,6 @@ reduceToGenes <- function( gs, X )
     X[,c("ID","Label",gs)]
 }
 
-## Train-test for a single pair using logistic regression
-## X - matrix of expression values; rownames are sample IDs; colnames are genes
-## y - character vector of labels, sampled from {"neg","pos"}
-## vTest - IDs to withhold for testing
-## Returns a length(vTest)-by-3 data frame containing test IDs, true Labels and predictions
-liblinear_lgr <- function( X, y, vTest )
-{
-    ## Argument verification
-    stopifnot( is.matrix(X) )
-    stopifnot( all(names(y) == rownames(X)) )
-    stopifnot( all(vTest %in% rownames(X)) )
-    stopifnot( all(sort(unique(y)) == c("neg","pos")) )
-    
-    ## Split the data into train and test
-    vTrain <- setdiff( rownames(X), vTest )
-    Xte <- X[vTest,]
-    Xtr <- X[vTrain,]
-    ytr <- y[vTrain]
-
-    ## Train a model and apply it to test data
-    m <- LiblineaR::LiblineaR( Xtr, ytr, type=0 )
-    ypred <- predict( m, Xte, proba=TRUE )$probabilities[,"pos"]
-    tibble::enframe( y[vTest], "ID", "Label" ) %>% dplyr::mutate( Pred = ypred )
-}
-
-## Train-test for a single pair using support vector machines
-## X - matrix of expression values; rownames are sample IDs; colnames are genes
-## y - character vector of labels, sampled from {"neg","pos"}
-## vTest - IDs to withhold for testing
-## Returns a length(vTest)-by-3 data frame containing test IDs, true Labels and predictions
-liblinear_svm <- function( X, y, vTest )
-{
-    ## Argument verification
-    stopifnot( is.matrix(X) )
-    stopifnot( all(names(y) == rownames(X)) )
-    stopifnot( all(vTest %in% rownames(X)) )
-    stopifnot( all(sort(unique(y)) == c("neg","pos")) )
-    
-    ## Split the data into train and test
-    vTrain <- setdiff( rownames(X), vTest )
-    Xte <- X[vTest,]
-    Xtr <- X[vTrain,]
-    ytr <- y[vTrain]
-
-    ## Train a model and apply it to test data
-    m <- LiblineaR::LiblineaR( Xtr, ytr, type=2 )
-    p <- predict( m, Xte, decisionValues=TRUE )
-    ypred <- `if`( !identical(p$decisionValues[,"pos"], c(0,0)),
-                  p$decisionValues[,"pos"],
-                  -p$decisionValues[,"neg"] ) 
-    tibble::enframe( y[vTest], "ID", "Label" ) %>% dplyr::mutate( Pred = ypred )
-}
-
 ## Leave pair out cross-validation for a given dataset
 ## XY - dataset must contain columns ID (denoting sample identifiers) and Label
 ## lPairs - list of vectors-of-length-2 specifying IDs to withhold
