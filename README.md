@@ -105,7 +105,7 @@ By default, the function runs logistic regression. The user is able to run other
 ``` r
 pairs2 <- preparePairs(task2)
 evalGeneSets( list("Allen, et al."=gs), task2, pairs2, 100, method="svm" )
-   Set           Feats        AUC BK           pval
-   <chr>         <list>     <dbl> <list>      <dbl>
- 1 Allen, et al. <chr [61]> 0.669 <dbl [100]>  0.16
+#   Set           Feats        AUC BK           pval
+#   <chr>         <list>     <dbl> <list>      <dbl>
+# 1 Allen, et al. <chr [61]> 0.669 <dbl [100]>  0.16
 ```
