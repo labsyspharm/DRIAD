@@ -60,7 +60,7 @@ wrangleMSBB <- function( destDir = "~/data/amp-ad/msbb" )
     ## Save each region into a separate file
     cat( "Writing output to", destDir, "\n" )
     fnOut <- names(X) %>% stringr::str_sub( 3 ) %>%
-        stringr::str_c( "msbb", ., ".tsv.gz" ) %>% purrr::map( ~file.path(destDir,.x) )
+        stringr::str_c( "msbb", ., ".tsv.gz" ) %>% purrr::map_chr( ~file.path(destDir,.x) )
     R <- purrr::map2( X, fnOut, readr::write_tsv )
     fnOut
 }
