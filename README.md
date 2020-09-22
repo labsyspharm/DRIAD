@@ -14,7 +14,7 @@ devtools::install_github( "labsyspharm/DRIAD" )
 
 Once installed, the package can be loaded using the standard `library()` command:
 ``` r
-library( DRIAD)
+library(DRIAD)
 ```
 
 ## Wrangling AMP-AD datasets
@@ -99,3 +99,13 @@ evalGeneSets( list("Allen, et al."=gs), task1, pairs1, 100 )
 ```
 
 The function returns the set of gene names that are found in the dataset (61 out of the 68 we specified), the area under the ROC curve (AUC) estimated through LPOCV, the 100 performance values associated with background sets, and the resulting empricial p-value.
+
+By default, the function runs logistic regression. The user is able to run other methods by specifying the appropriate `method=` parameter values: `"svm"` for support vector machines, `"xgb"` for xgboost (random forest), and `"nn"` for neural networks.
+
+``` r
+pairs2 <- preparePairs(task2)
+evalGeneSets( list("Allen, et al."=gs), task2, pairs2, 100, method="svm" )
+   Set           Feats        AUC BK           pval
+   <chr>         <list>     <dbl> <list>      <dbl>
+ 1 Allen, et al. <chr [61]> 0.669 <dbl [100]>  0.16
+```
