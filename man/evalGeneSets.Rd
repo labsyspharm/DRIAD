@@ -15,7 +15,8 @@ evalGeneSets(lGSI, XY, lP, nBK = 0, method = "lgr", rs = 100)
 
 \item{nBK}{number of background sets to generate for each GSI}
 
-\item{method}{one of {"lgr", "svm"} for logistics regression and svm respectively}
+\item{method}{one of {"lgr", "svm, xgb", "nn"} for logistics regression,
+support vector machines, xgboost and neural nets, respectively}
 
 \item{rs}{random seed to allow for reproducibility}
 }

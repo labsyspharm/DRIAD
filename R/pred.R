@@ -65,9 +65,30 @@ xgboost <- function( X, y, vTest )
     Xtr <- X[vTrain,]
     ytr <- y01[vTrain]
 
-    mdl <- xgboost::xgboost( Xtr, ytr, nrounds=100, verbose=0 )
+    mdl <- xgboost::xgboost( Xtr, ytr, nrounds=20, verbose=0 )
     
     ## Train a model and apply it to test data
     ypred <- predict( mdl, Xte )
     tibble::enframe( y[vTest], "ID", "Label" ) %>% dplyr::mutate( Pred = ypred )
+}
+
+nnet <- function( X, y, vTest )
+{
+    validatePredInputs( X, y, vTest )
+
+    ## Convert response to 0,1
+    y01 <- ifelse( y == "pos", 1, 0 )
+    
+    ## Split the data into train and test
+    vTrain <- setdiff( rownames(X), vTest )
+    Xte <- X[vTest,]
+    Xtr <- X[vTrain,]
+    ytr <- y01[vTrain]
+
+    mdl <- purrr::quietly(nnet::nnet)( Xtr, ytr, size=round(sqrt(ncol(Xtr))) )$result
+    
+    ## Train a model and apply it to test data
+    ypred <- predict( mdl, Xte ) %>% as.data.frame %>%
+        tibble::rownames_to_column("ID") %>% dplyr::rename( Pred = V1 )
+    tibble::enframe( y[vTest], "ID", "Label" ) %>% dplyr::inner_join(ypred, by="ID")
 }

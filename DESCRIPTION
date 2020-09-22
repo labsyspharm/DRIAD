@@ -1,6 +1,6 @@
 Package: DRIAD
 Title: Drug Repurposing In Alzheimer's Disease
-Version: 0.1
+Version: 0.2
 Authors@R: c(
     person( "Artem", "Sokolov", email="artem.sokolov@gmail.com", role = c("aut","cre") ),
     person( "et al.", email="", role = c("aut") ) )
@@ -12,5 +12,7 @@ Depends: R (>= 3.6.1)
 Imports:
     tidyverse,
     furrr,
-    LiblineaR
+    LiblineaR,
+    xgboost,
+    nnet
 RoxygenNote: 7.1.0

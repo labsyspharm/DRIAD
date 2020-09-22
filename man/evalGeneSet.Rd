@@ -15,7 +15,8 @@ evalGeneSet(gsi, XY, lP, nBK = 0, method = "lgr")
 
 \item{nBK}{number of background sets that should be generated alongside the gene set of interest}
 
-\item{method}{one of {"lgr", "svm"} for logistics regression and svm respectively}
+\item{method}{one of {"lgr", "svm, xgb", "nn"} for logistics regression,
+support vector machines, xgboost and neural nets, respectively}
 }
 \value{
 A data frame of results, where the first row corresponds to the gene set of interest,
