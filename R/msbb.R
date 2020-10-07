@@ -34,7 +34,7 @@ wrangleMSBB <- function( destDir = "~/data/amp-ad/msbb" )
     ## Load clinical covariates and combine with the expression matrix
     cat( "Downloading clinical covariates...\n" )
     Y <- syn("syn6101474") %>% readr::read_csv(col_types=readr::cols()) %>%
-        dplyr::select( individualIdentifier, PMI, AOD, CDR, Braak=bbscore ) %>%
+        dplyr::select( individualIdentifier=individualID, PMI=pmi, AOD=ageDeath, CDR, Braak ) %>%
         dplyr::inner_join( Z, by = "individualIdentifier" ) %>%
         dplyr::rename( ID=individualIdentifier )
 
