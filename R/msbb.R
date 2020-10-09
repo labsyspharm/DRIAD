@@ -30,7 +30,7 @@ wrangleMSBB <- function( destDir = "~/data/amp-ad/msbb" )
     Z <- syn("syn6100548") %>% readr::read_csv(col_types=readr::cols()) %>%
         dplyr::select( Barcode=barcode, individualIdentifier ) %>%
         dplyr::distinct() %>% dplyr::mutate_at( "Barcode", as.character )
-    
+
     ## Load clinical covariates and combine with the expression matrix
     cat( "Downloading clinical covariates...\n" )
     Y <- syn("syn6101474") %>% readr::read_csv(col_types=readr::cols()) %>%
@@ -46,16 +46,15 @@ wrangleMSBB <- function( destDir = "~/data/amp-ad/msbb" )
               BM36="syn16795937", BM44="syn16795940" )
     X <- purrr::map( synX, function(s) {
         read.delim( syn(s), check.names=FALSE ) %>%
-            tibble::rownames_to_column( "ENSEMBL" ) %>%
-            dplyr::inner_join( BT, by="ENSEMBL" ) %>%
-            dplyr::filter( ENSEMBL != "ENSG00000258724" ) %>%
-            dplyr::select( -ENSEMBL ) %>%
+            dplyr::inner_join( BT, by= c( "Ensembl ID"="ENSEMBL" ) ) %>%
+            dplyr::filter( `Ensembl ID` != "ENSG00000258724" ) %>%
+            dplyr::select( -`Ensembl ID` ) %>%
             tidyr::gather( RNA_ID, Value, -HUGO ) %>%
             dplyr::mutate( Barcode = stringr::str_split(RNA_ID, "_", simplify=TRUE)[,3],
                           RNA_ID = NULL ) %>%
             dplyr::inner_join( Y, by="Barcode" ) %>%
             tidyr::spread( HUGO, Value ) })
-    
+
     ## Compose filenames
     ## Save each region into a separate file
     cat( "Writing output to", destDir, "\n" )
