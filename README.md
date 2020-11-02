@@ -1,9 +1,23 @@
 # DRIAD: Drug Repurposing in Alzheimer's Disease
 
+## Related resources
+
+* DRIAD as a webapp: https://labsyspharm.shinyapps.io/DRIAD/
+* Pre-print: https://www.biorxiv.org/content/10.1101/2020.05.15.098749v1
+* Scripts to fully reproduce the figures: https://github.com/labsyspharm/DRIADrc
+
 ## Funding
 We gratefully acknowledge support by NIA grant R01 AG058063: Harnessing Diverse BioInformatic Approaches to Repurpose Drugs for Alzheimers Disease.
 
+## Prerequisites
+
+* Operating System: Windows 10, Mac OS X, Linux
+* [R version 3.6.3 or later](https://www.r-project.org/)
+* [tidyverse 1.3.0 or later](https://www.tidyverse.org/)
+
 ## Installation
+
+Appx. installation time is less than 5min.
 
 The R package can be installed directly from GitHub using
 
@@ -98,7 +112,7 @@ evalGeneSets( list("Allen, et al."=gs), task1, pairs1, 100 )
 # 1 Allen, et al. <chr [61]> 0.816 <dbl [100]>  0.05
 ```
 
-The function returns the set of gene names that are found in the dataset (61 out of the 68 we specified), the area under the ROC curve (AUC) estimated through LPOCV, the 100 performance values associated with background sets, and the resulting empricial p-value.
+The evaluation against 100 background sets takes 2-3 minutes on an average desktop machine. The function returns the set of gene names that are found in the dataset (61 out of the 68 we specified), the area under the ROC curve (AUC) estimated through LPOCV, the 100 performance values associated with background sets, and the resulting empricial p-value.
 
 By default, the function runs logistic regression. The user is able to run other methods by specifying the appropriate `method=` parameter values: `"svm"` for support vector machines, `"xgb"` for xgboost (random forest), and `"nn"` for neural networks.
 
