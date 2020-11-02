@@ -85,7 +85,7 @@ nnet <- function( X, y, vTest )
     Xtr <- X[vTrain,]
     ytr <- y01[vTrain]
 
-    mdl <- purrr::quietly(nnet::nnet)( Xtr, ytr, size=round(sqrt(ncol(Xtr))) )$result
+    mdl <- purrr::quietly(nnet::nnet)( Xtr, ytr, size=2, MaxNWts=10000 )$result
     
     ## Train a model and apply it to test data
     ypred <- predict( mdl, Xte ) %>% as.data.frame %>%
