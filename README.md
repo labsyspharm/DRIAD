@@ -2,8 +2,8 @@
 
 ## Related resources
 
+* Manuscript: https://www.nature.com/articles/s41467-021-21330-0
 * DRIAD as a webapp: https://labsyspharm.shinyapps.io/DRIAD/
-* Pre-print: https://www.biorxiv.org/content/10.1101/2020.05.15.098749v1
 * Scripts to fully reproduce the figures: https://github.com/labsyspharm/DRIADrc
 
 ## Funding
